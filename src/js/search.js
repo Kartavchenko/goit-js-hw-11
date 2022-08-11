@@ -1,4 +1,4 @@
-import Axios from 'axios';
+import axios from 'axios';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import ApiServicePixabay from './fetch-search';
 
@@ -9,19 +9,59 @@ const newApiPixabay = new ApiServicePixabay();
 
 form.addEventListener('submit', onSerach);
 loadMore.addEventListener('click', onLoadMore);
+loadMore.classList.add("is-hidden");
 
 function onSerach(photo) {
   photo.preventDefault();
   newApiPixabay.quary = photo.currentTarget.elements.searchQuery.value;
-
   newApiPixabay.resetPage();
-  newApiPixabay
-    .fetchPixabay()
-    .then(resetSearchMarkup)
-    .catch(error => {
-      error;
-    });
+  getFetchCall();
+  // here put btn "wait" when fetch
+  loadMore.classList.remove("is-hidden");
+};
+
+async function getFetchCall() {
+  try {
+    const onMarkupSearch = await newApiPixabay.fetchPixabay();
+    console.log(onMarkupSearch)
+    if (onMarkupSearch.hits < 1) {
+      Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+    };
+    if (onMarkupSearch.hits.length) {
+      loadMore.classList.add("is-hidden");
+    }
+    return resetSearchMarkup(onMarkupSearch);
+  } catch (error) {
+    console.log(error);
+  };
+};
+
+function resetSearchMarkup(e) {
+  gallery.innerHTML = makePhotoMarkup(e);
+};
+
+function appendLoadMoreMarkup(e) {
+  gallery.insertAdjacentHTML('beforeend', makePhotoMarkup(e));
+  // loadMore.setAttribute("disabled", "");
+};
+
+function hideBtnLoadMore() {
+
 }
+
+function onLoadMore() {
+  newApiPixabay.incrementPage();
+  fetchForBtnLoadMore();
+};
+
+async function fetchForBtnLoadMore() {
+  try {
+    const dataOfPixabay = await newApiPixabay.fetchPixabay();
+    return appendLoadMoreMarkup(dataOfPixabay);
+  } catch (error) {
+    console.log(error);
+  };
+};
 
 function makePhotoMarkup(q) {
   return q.hits
@@ -50,22 +90,4 @@ function makePhotoMarkup(q) {
       </div>`;
     })
     .join('');
-}
-
-function resetSearchMarkup(e) {
-  gallery.innerHTML = makePhotoMarkup(e);
-}
-
-function appendLoadMoreMarkup(e) {
-  gallery.insertAdjacentHTML('beforeend', makePhotoMarkup(e));
-}
-
-async function onLoadMore() {
-  newApiPixabay.accretionPage();
-  newApiPixabay
-    .fetchPixabay()
-    .then(appendLoadMoreMarkup)
-    .catch(error => {
-      error;
-    });
-}
+};
