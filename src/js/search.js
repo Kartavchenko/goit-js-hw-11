@@ -1,4 +1,4 @@
-import axios from 'axios';
+import {Spinner} from 'spin.js';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import ApiServicePixabay from './fetch-search';
 
@@ -10,25 +10,47 @@ const newApiPixabay = new ApiServicePixabay();
 form.addEventListener('submit', onSerach);
 loadMore.addEventListener('click', onLoadMore);
 loadMore.classList.add("is-hidden");
+const opts = {
+  left: "10%",
+  scale: 0.5,
+  animation: 'spinner-line-shrink',
+};
+
+const spinner = new Spinner(opts).spin();
 
 function onSerach(photo) {
   photo.preventDefault();
   newApiPixabay.quary = photo.currentTarget.elements.searchQuery.value;
   newApiPixabay.resetPage();
   getFetchCall();
-  // here put btn "wait" when fetch
   loadMore.classList.remove("is-hidden");
+  showBtnDownloading(spinner.spin());
+};
+
+function showBtnDownloading(e) {
+  loadMore.textContent = "Downloading";
+  loadMore.classList.add("download");
+  loadMore.appendChild(spinner.el);
+};
+
+function hideBtnDownloading() {
+  loadMore.textContent = "Load More";
+  loadMore.classList.remove("download");
+  spinner.stop();
 };
 
 async function getFetchCall() {
   try {
     const onMarkupSearch = await newApiPixabay.fetchPixabay();
     console.log(onMarkupSearch)
+    hideBtnDownloading();
     if (onMarkupSearch.hits < 1) {
       Notify.failure("Sorry, there are no images matching your search query. Please try again.");
     };
-    if (onMarkupSearch.hits.length) {
-      loadMore.classList.add("is-hidden");
+    if (
+      onMarkupSearch.hits.length === onMarkupSearch.totalHits.length
+    ) {
+      loadMore.classList.add('is-hidden');
     }
     return resetSearchMarkup(onMarkupSearch);
   } catch (error) {
@@ -42,21 +64,18 @@ function resetSearchMarkup(e) {
 
 function appendLoadMoreMarkup(e) {
   gallery.insertAdjacentHTML('beforeend', makePhotoMarkup(e));
-  // loadMore.setAttribute("disabled", "");
 };
-
-function hideBtnLoadMore() {
-
-}
 
 function onLoadMore() {
   newApiPixabay.incrementPage();
   fetchForBtnLoadMore();
+  showBtnDownloading(spinner.spin());
 };
 
 async function fetchForBtnLoadMore() {
   try {
     const dataOfPixabay = await newApiPixabay.fetchPixabay();
+    hideBtnDownloading();
     return appendLoadMoreMarkup(dataOfPixabay);
   } catch (error) {
     console.log(error);
