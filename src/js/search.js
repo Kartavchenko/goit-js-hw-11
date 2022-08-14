@@ -42,15 +42,13 @@ function hideBtnDownloading() {
 async function getFetchCall() {
   try {
     const onMarkupSearch = await newApiPixabay.fetchPixabay();
-    console.log(onMarkupSearch)
     hideBtnDownloading();
     if (onMarkupSearch.hits < 1) {
       Notify.failure("Sorry, there are no images matching your search query. Please try again.");
     };
-    if (
-      onMarkupSearch.hits.length === onMarkupSearch.totalHits.length
-    ) {
+    if (onMarkupSearch.hits.length < 40) {
       loadMore.classList.add('is-hidden');
+      Notify.info("We're sorry, but you've reached the end of search results.");
     }
     return resetSearchMarkup(onMarkupSearch);
   } catch (error) {
@@ -75,6 +73,10 @@ function onLoadMore() {
 async function fetchForBtnLoadMore() {
   try {
     const dataOfPixabay = await newApiPixabay.fetchPixabay();
+    if (dataOfPixabay.hits.length < 40) {
+      loadMore.classList.add('is-hidden');
+      Notify.info("We're sorry, but you've reached the end of search results.");
+    }
     hideBtnDownloading();
     return appendLoadMoreMarkup(dataOfPixabay);
   } catch (error) {
