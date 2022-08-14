@@ -43,12 +43,12 @@ async function getFetchCall() {
   try {
     const onMarkupSearch = await newApiPixabay.fetchPixabay();
     hideBtnDownloading();
-    if (onMarkupSearch.hits < 1) {
+    if (onMarkupSearch.hits.length < 1) {
       Notify.failure("Sorry, there are no images matching your search query. Please try again.");
     };
     if (onMarkupSearch.hits.length < 40) {
       loadMore.classList.add('is-hidden');
-      Notify.info("We're sorry, but you've reached the end of search results.");
+      // Notify.info("We're sorry, but you've reached the end of search results.");
     }
     return resetSearchMarkup(onMarkupSearch);
   } catch (error) {
